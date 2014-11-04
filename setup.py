@@ -30,12 +30,22 @@ class PyTest(TestCommand):
 setup(
     name='dprj',
     version='0.1.0',
+    license='MIT',
     packages=find_packages(exclude=('tests', 'tests.*')),
     description='Double-metaphone-like algorithm for the french language',
+    long_description=open("README.rst", 'rb').read().decode('utf-8'),
     author='Sylvain Fankhauser',
     author_email='sylvain@fankhauser.name',
     url='https://github.com/sephii/dprj',
     tests_require=tests_require,
     include_package_data=False,
     cmdclass = {'test': PyTest},
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3.4",
+        "Programming Language :: Python :: 2.7",
+    ],
 )

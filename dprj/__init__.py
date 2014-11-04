@@ -30,10 +30,16 @@ class Speller(object):
     def handle_letter(self):
         current_letter = self.word[self.position]
 
-        # The letter 'h' doesn't make any sense on its own
+        if current_letter == self.get_letters(self.position - 1, 1):
+            self.position += 1
+            return
+
+        # The letter 'h' doesn't make any sense on its own, skip it
         if current_letter in 'aeouyh':
             self.position += 1
         elif current_letter == 'i':
+            # Strip the 'll' if preceded by the letter 'i', except if it's the
+            # first phoneme (eg. 'illumination')
             if self.position > 0 and self.get_letters(self.position + 1, 2) == 'll':
                 self.position += 3
             else:
@@ -41,113 +47,132 @@ class Speller(object):
         elif current_letter == 'c':
             next_letters = self.get_letters(self.position + 1, 2)
 
+            # 'accès', 'accident'
             if next_letters in ['ce', 'ci']:
-                self.spelling += 'ks'
-                self.position += 2
+                self.spell_and_move('ks', 2)
+            # 'accord'
             elif self.get_next_letter() == 'c':
-                self.spelling += 'k'
-                self.position += 2
+                self.spell_and_move('k', 2)
+            # 'c' is pronounced 's' if followed by either 'i' or 'e'
             elif self.get_next_letter() in ['i', 'e']:
-                self.spelling += 's'
-                self.position += 1
-            # TODO plurals
+                self.spell_and_move('s', 1)
             elif self.get_next_letter() == 'h':
-                ch_as_k_words = ['archange', 'charism']
+                # Some exceptions where 'ch' is pronounced 'k'
+                ch_as_k_words = ['archange', 'charism', 'psycho', 'drachm']
 
                 for word in ch_as_k_words:
                     if self.word.startswith(word):
-                        self.spelling += 'k'
-                        self.position += 2
+                        self.spell_and_move('k', 2)
                         return
 
-                # ch + consonant = k (eg. chrysanthème)
+                # 'ch' followed by consonant = 'k' (eg. 'chrysanthème')
                 if self.get_letters(self.position + 2, 1) not in 'aeiouy':
-                    self.spelling += 'k'
+                    spelling = 'k'
                 else:
-                    self.spelling += 'x'
-                self.position += 2
+                    spelling = 'x'
+                self.spell_and_move(spelling, 2)
             else:
-                self.spelling += 'k'
-                self.position += 1
+                self.spell_and_move('k', 1)
         elif current_letter == 'x':
+            # Strip silent final 'x' (eg. 'barreaux')
             if not self.get_next_letter():
                 self.position += 1
-            elif self.get_next_letter() in 'aeiouy':
-                if self.get_letters(self.position - 1, 1) == 'e':
-                    self.spelling += 'gz'
-                    self.position += 1
+            elif self.get_next_letter() in 'aeiouyh':
+                # 'x' is pronounced 'gz' if followed by a vowel and preceded by
+                # an 'e' (eg. 'examen'), or 'ks' if preceded by another vowel
+                # (eg. 'oxyde', 'axe')
+                if self.get_letters(self.position - 1, 1) in 'e':
+                    self.spell_and_move('gz', 1)
                 else:
-                    self.spelling += 'ks'
-                    self.position += 1
+                    self.spell_and_move('ks', 1)
             else:
-                self.spelling += 'ks'
-                self.position += 1 if self.get_next_letter() != 'c' else 2
+                self.spell_and_move(
+                    'ks',
+                    # 'x' followed by 'c' is 'ks' (eg. 'excès'), so skip the
+                    # extra 'c' since we already have the 'ks' sound
+                    1 if self.get_next_letter() != 'c' else 2
+                )
         elif current_letter == 'p':
+            # Easy one, 'ph' is always pronounced 'f'
             if self.get_letters(self.position + 1, 1) == 'h':
-                self.spelling += 'f'
-                self.position += 2
+                self.spell_and_move('f', 2)
             else:
-                self.spelling += 'p'
-                self.position += 1 if self.get_next_letter() != 'p' else 2
+                self.spell_and_move('p', 1)
         elif current_letter == 't':
+            # 'ti' is pronounced 's' in some cases (eg. 'action')
             if self.get_letters(self.position + 1, 2) in ['ie', 'ia', 'io']:
-                self.spelling += 's'
-                self.position += 3
-            elif not self.get_next_letter():
+                self.spell_and_move('s', 3)
+            # Final 't' is silent
+            elif not self.get_next_letter() or self.get_next_letters(2) == 's':
                 self.position += 1
             else:
-                self.spelling += 't'
-                self.position += 1 if self.get_next_letter() != 't' else 2
+                self.spell_and_move('t', 1)
         elif current_letter == 'g':
-            if self.get_letters(self.position + 1, 1) in ['i', 'e']:
-                self.spelling += 'j'
-                self.position += 2
+            # 'g' is pronounced 'j' if followed by 'i' or 'e' (eg. 'mage',
+            # 'magicien')
+            if self.get_letters(self.position + 1, 1) in 'ie':
+                self.spell_and_move('j', 2)
+            # 'g' followed by an 'n' is silent
             elif self.get_letters(self.position + 1, 1) != 'n':
-                self.spelling += 'g'
-                self.position += 1
+                self.spell_and_move('g', 1)
             else:
                 self.position += 1
         elif current_letter == 's':
-            # schiste, schizophrène
             if self.get_letters(self.position + 1, 2) == 'ch':
+                # 'schiz' (eg. 'schizophrène') is a special case where 'sch' is
+                # pronounced 'sk', otherwise it's pronounced 'x' (eg.
+                # 'schiste')
                 if self.word.startswith('schiz'):
-                    self.spelling += 'sk'
-                    self.position += 3
+                    self.spell_and_move('sk', 3)
                 else:
-                    self.spelling += 'x'
-                    self.position += 3
-            # science
-            elif self.get_letters(self.position + 1, 1) == 'c':
-                self.spelling += 's'
-                self.position += 2
+                    self.spell_and_move('x', 3)
+            # If 's' is followed by 'ci' or 'ce', don't repeat the 's' sound
+            # (eg. 'science'). Other vowels cause the 'c' to be pronounced (eg.
+            # 'scaphandre')
+            elif self.get_letters(self.position + 1, 2) in ['ci', 'ce']:
+                self.spell_and_move('s', 2)
+            # Final 's' is silent except for some words (is there any logic in
+            # this?)
             elif not self.get_next_letter() and self.word not in ['oasis', 'anis', 'anus']:
                 self.position += 1
             else:
-                self.spelling += 's'
-                self.position += 1 if self.get_next_letter() != 's' else 2
+                self.spell_and_move('s', 1)
         elif current_letter == 'l':
+            # Final 'l' is silent if preceded by 'ei' (eg. 'oeil')
             if not self.get_next_letter() and self.get_letters(self.position - 2, 2) == 'ei':
                 self.position += 1
             else:
-                self.spelling += 'l'
-                self.position += 1 if self.get_next_letter() != 'l' else 2
-        # TODO plural
+                self.spell_and_move('l', 1)
         elif current_letter == 'f':
-            if not self.get_next_letter():
+            # Final 'f' is silent if preceded by a consonant (eg. 'nerf').
+            # Special case: 'clef'
+            if ((not self.get_next_letter() or self.get_next_letters(2) == 's')
+                    and ((self.get_letters(self.position - 1, 1) not in 'aeiouy')
+                    or (self.word.startswith('clef')))):
                 self.position += 1
             else:
-                self.spelling += 'f'
-                self.position += 1 if self.get_next_letter() != 'f' else 2
+                self.spell_and_move('f', 1)
+        elif current_letter == 'd':
+            # Final 'd' is silent (eg. 'accord')
+            if not self.get_next_letter() or self.get_next_letters(2) == 's':
+                self.position += 1
+            else:
+                self.spell_and_move('d', 1)
         else:
-            self.spelling += current_letter
-            self.position += 1 if self.get_next_letter() != current_letter else 2
-
+            self.spell_and_move(current_letter, 1)
 
     def get_next_letter(self):
-        return self.get_letters(self.position + 1, 1)
+        return self.get_next_letters(1)
+
+    def get_next_letters(self, length):
+        return self.get_letters(self.position + 1, length)
 
     def get_letters(self, position, length=1):
         return ''.join(self.word[position:position + length])
+
+    def spell_and_move(self, sound, move):
+        self.spelling += sound
+        self.position += move
 
 
 def say(word):

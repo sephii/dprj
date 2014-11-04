@@ -21,8 +21,9 @@ def test_ill():
 def test_cc():
     assert say(u'accident') == u'ksdn'
     assert say(u'accès') == u'ks'
+    assert say(u'accélération') == u'kslrsn'
     assert say(u'accord') == u'kr'
-    assert say(u'accaparer') == u'kpr'
+    assert say(u'accapare') == u'kpr'
     assert say(u'accueil') == u'k'
 
 
@@ -36,7 +37,7 @@ def test_final_x():
 
 
 def test_middle_x():
-    assert say(u'exagérer') == u'gzjr'
+    assert say(u'exagère') == u'gzjr'
     assert say(u'axiome') == u'ksm'
 
 
@@ -51,3 +52,23 @@ def test_gn():
 def test_final_s():
     assert say(u'sons') == u'sn'
     assert say(u'anis') == u'ns'
+    assert say(u'flûtes') == u'flt'
+    assert say(u'fluets') == u'fl'
+
+
+def test_sc():
+    assert say(u'scaphandre') == u'skfndr'
+    assert say(u'science') == u'sns'
+
+
+def test_final_f():
+    assert say(u'aéronef') == u'rnf'
+    assert say(u'clef') == u'kl'
+    assert say(u'bref') == u'brf'
+    assert say(u'nerf') == u'nr'
+
+
+def test_double_letters():
+    assert say(u'allée') == u'l'
+    assert say(u'femme') == u'fm'
+    assert say(u'attablé') == u'tbl'

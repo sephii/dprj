@@ -11,19 +11,31 @@ really tricky sometimes.
 How to use it?
 ==============
 
+Install it from PyPI::
+
+    pip install dprj
+
+Then just use the ``say`` function:
+
 .. code-block:: python
 
     >> from dprj import say
     >> say(u'chaussette')
     u'xst'
+    >> say(u'psychologue')
+    u'psklg'
+    >> say(u'agglomération')
+    u'glmrsn'
+    >> say(u'accès')
+    u'ks'
 
 How reliable is it?
 ===================
 
 Well, try it and see for yourself! There are still some cases to handle:
 
-* plurals
-* silent word endings (eg. ``f`` in ``nerf``, ``d`` in ``accord``, etc)
+* some plurals
+* some silent final letters (eg. 'r')
 * french weirdnesses
 
 If you get incorrect results for any word please let me know by filing and
